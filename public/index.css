@@ -8,5 +8,5 @@ body {
 }
 
 .flex-gap > button {
-  margin: 0 10px;
+  margin: 10px 10px 0;
 }
