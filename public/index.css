@@ -1,0 +1,12 @@
+body {
+  font-family: "Roboto", sans-serif;
+}
+
+.bg-container {
+  min-height: 100vh;
+  color: white;
+}
+
+.flex-gap > button {
+  margin: 0 10px;
+}
