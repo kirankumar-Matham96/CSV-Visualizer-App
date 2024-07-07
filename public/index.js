@@ -1,5 +1,6 @@
 // API related functionality
 const baseUrl = "http://localhost:3000";
+let fileData = {};
 
 const uploadFile = async (data) => {
   try {
@@ -30,6 +31,10 @@ const getFileData = async (id) => {
   try {
     const response = await fetch(`${baseUrl}/api/csv/${id}`);
     const readable = await response.json();
+
+    // saving for search filtering
+    fileData = readable.file;
+
     return readable.file;
   } catch (error) {
     console.log(error);
@@ -42,6 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const fileUploadFormEl = document.querySelector(".file-upload-form");
   const fileListEl = document.querySelector(".files-list-container");
+  const searchInputEl = document.querySelector("#search-input");
   const tableEl = document.querySelector(".file-data-table-container");
 
   fileUploadFormEl.addEventListener("submit", async (event) => {
@@ -105,6 +111,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     </tbody>
     `;
   }
+
+  /**
+   * To filter the data.
+   * The filter is applied on first column.
+   */
+  searchInputEl.addEventListener("input", (event) => {
+    event.preventDefault();
+
+    const headers = Object.keys(fileData.data[0]);
+
+    const filteredData = {};
+    const data = fileData.data.filter((item) => {
+      if (
+        item[headers[0]]
+          .toLowerCase()
+          .includes(event.target.value.toLowerCase())
+      ) {
+        return item;
+      }
+    });
+
+    filteredData.data = data;
+    createFileDisplayContent(filteredData);
+  });
 
   // populating the available files in the list
   createFilesList();
