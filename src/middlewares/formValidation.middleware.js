@@ -1,6 +1,11 @@
-import { body, validationResult } from "express-validator";
 import { ApplicationError } from "./errorHandler.middleware.js";
 
+/**
+ * To validate file input
+ * @param {request} req
+ * @param {response} res
+ * @param {next middleware} next
+ */
 export const validate = async (req, res, next) => {
   try {
     const file = req.file;

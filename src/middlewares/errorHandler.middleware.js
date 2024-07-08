@@ -1,3 +1,6 @@
+/**
+ * Custom class to handle errors
+ */
 export class ApplicationError extends Error {
   constructor(message, code) {
     super(message);
@@ -5,6 +8,13 @@ export class ApplicationError extends Error {
   }
 }
 
+/**
+ * 
+ * @param {error} err 
+ * @param {request} req 
+ * @param {response} res 
+ * @param {next middleware} next 
+ */
 export const errorHandlerMiddleware = (err, req, res, next) => {
   const errorMessage = err.message || "something went wrong!";
   const statusCode = err.errorCode || 500;

@@ -2,6 +2,10 @@ import { CSVModel } from "./csv.schema.js";
 import { ApplicationError } from "../../middlewares/errorHandler.middleware.js";
 
 export class CSVRepository {
+  /**
+   * To add the file to DB
+   * @param {data object} data 
+   */
   add = async (data) => {
     try {
       const newDoc = new CSVModel(data);
@@ -11,6 +15,11 @@ export class CSVRepository {
     }
   };
 
+  /**
+   * To get the file by id
+   * @param {file id} fileId 
+   * @returns Object
+   */
   get = async (fileId) => {
     try {
       const data = await CSVModel.findById(fileId);
@@ -25,6 +34,10 @@ export class CSVRepository {
     }
   };
 
+  /**
+   * To get all the files
+   * @returns Object - Array
+   */
   getAll = async () => {
     try {
       const data = await CSVModel.find();
@@ -34,6 +47,11 @@ export class CSVRepository {
     }
   };
 
+  /**
+   * To delete the file by id
+   * @param {file id} fileId 
+   * @returns Object
+   */
   delete = async (fileId) => {
     try {
       const data = await CSVModel.findByIdAndDelete(fileId);

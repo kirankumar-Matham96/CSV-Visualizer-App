@@ -7,6 +7,12 @@ export class CSVController {
     this.fileRepository = new CSVRepository();
   }
 
+  /**
+   * To upload new file
+   * @param {request} req
+   * @param {response} res
+   * @param {next middleware} next
+   */
   addFile = async (req, res, next) => {
     try {
       const fullData = [];
@@ -37,6 +43,12 @@ export class CSVController {
     }
   };
 
+  /**
+   * To get all the files
+   * @param {request} req
+   * @param {response} res
+   * @param {next middleware} next
+   */
   getFiles = async (req, res, next) => {
     try {
       const files = await this.fileRepository.getAll();
@@ -49,6 +61,13 @@ export class CSVController {
     }
   };
 
+  /**
+   * To get the file by an id.
+   * Included pagination.
+   * @param {request} req
+   * @param {response} res
+   * @param {next middleware} next
+   */
   getFileById = async (req, res, next) => {
     try {
       const { page } = req.query;
@@ -61,24 +80,26 @@ export class CSVController {
         limit *= page;
       }
 
-      console.log({ page, offset, limit });
-
       // pagination
       const paginatedFile = {};
       paginatedFile.data = file.data.slice(offset, limit);
 
-      res
-        .status(200)
-        .json({
-          success: true,
-          file: paginatedFile,
-          totalItems: file.data.length,
-        });
+      res.status(200).json({
+        success: true,
+        file: paginatedFile,
+        totalItems: file.data.length,
+      });
     } catch (error) {
       next(error);
     }
   };
 
+  /**
+   * To delete the file by an id
+   * @param {request} req
+   * @param {response} res
+   * @param {next middleware} next
+   */
   deleteFileById = async (req, res, next) => {
     try {
       const { id } = req.params;
