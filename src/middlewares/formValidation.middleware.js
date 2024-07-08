@@ -5,29 +5,16 @@ export const validate = async (req, res, next) => {
   try {
     const file = req.file;
 
-    await body("file")
-      .notEmpty()
-      .custom(async (value) => {
-        if (
-          file.mimetype !== "text/csv" ||
-          !file.originalname.endswith(".csv")
-        ) {
-          throw new Error("please upload csv files only", 400);
-        }
-      })
-      .run(req);
+    if (!file) {
+      throw new ApplicationError("No file uploaded", 400);
+    }
 
-    const validationResults = validationResult(req);
-
-    console.log(validationResults.array().length);
-
-    if (validationResults.array().length > 0) {
-      throw new ApplicationError("Invalid file format", 400);
+    if (file.mimetype !== "text/csv" || !file.originalname.endsWith(".csv")) {
+      throw new ApplicationError("Please upload CSV files only", 400);
     }
 
     next();
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };

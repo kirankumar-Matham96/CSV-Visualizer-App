@@ -14,6 +14,7 @@ const uploadFile = async (data) => {
       headers: {},
       body: data,
     };
+
     const response = await fetch(`${baseUrl}/api/csv`, options);
     const readable = await response.json();
     return readable;
