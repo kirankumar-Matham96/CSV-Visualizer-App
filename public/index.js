@@ -1,5 +1,7 @@
 // API related functionality
-const baseUrl = "http://localhost:3000";
+let baseUrl = "http://localhost:3000";
+// NOTE: comment below line to run it locally
+baseUrl = "https://csv-visualizer-app.onrender.com";
 let fileData = {};
 let fileId = "";
 let totalItems = 0;
