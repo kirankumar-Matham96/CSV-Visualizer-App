@@ -43,6 +43,23 @@ const getFileData = async (id) => {
 
 // DOM related functionality
 document.addEventListener("DOMContentLoaded", async () => {
+  // Sorting functions
+  function sortAscending(columnName) {
+    const sortedData = {};
+    sortedData.data = fileData.data
+      .slice()
+      .sort((a, b) => a[columnName].localeCompare(b[columnName]));
+    createFileDisplayContent(sortedData);
+  }
+
+  function sortDescending(columnName) {
+    const sortedData = {};
+    sortedData.data = fileData.data
+      .slice()
+      .sort((a, b) => b[columnName].localeCompare(a[columnName]));
+    createFileDisplayContent(sortedData);
+  }
+
   const files = await getFiles();
 
   const fileUploadFormEl = document.querySelector(".file-upload-form");
@@ -54,9 +71,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       event.preventDefault();
       const formData = new FormData();
-      formData.append("file", event.target["file-input"].files[0]);
-      await uploadFile(formData);
-      createFilesList();
+      const file = event.target["file-input"].files[0];
+      const fileName = file.name.toLowerCase();
+      const isCsv = file.type === "text/csv" || fileName.endsWith(".csv");
+      const errorMessageEl = document.querySelector(".error-message");
+
+      if (!isCsv) {
+        errorMessageEl.classList.contains("d-none")
+          ? errorMessageEl.classList.remove("d-none")
+          : null;
+      } else {
+        errorMessageEl.classList.contains("d-none")
+          ? null
+          : errorMessageEl.classList.add("d-none");
+        formData.append("file", file);
+        await uploadFile(formData);
+        createFilesList();
+      }
     } catch (error) {
       console.log(error);
     }
@@ -95,7 +126,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     <thead>
       <tr>
         <th scope="col">#</th>
-        ${headings.map((row) => `<th scope="col">${row}</th>`).join("")}
+        ${headings
+          .map((row) => {
+            const element = `<th scope="col">${row}<button class="btn btn-secondary ms-3 sort-ascending-btn" data-id="${row}"><i class="fa-solid fa-chevron-up"></i></button> <button class="btn btn-secondary sort-descending-btn" data-id="${row}"><i class="fa-solid fa-chevron-down"></i></button> </th>`;
+            return element;
+          })
+          .join("")}
       </tr>
     </thead>
     <tbody>
@@ -110,6 +146,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         .join("")}  
     </tbody>
     `;
+
+    // TODO: Need to add a spinner for loading all the content and adding all the listeners
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+          const sortAscendingBtns = document.querySelectorAll(
+            ".sort-ascending-btn"
+          );
+          const sortDescendingBtns = document.querySelectorAll(
+            ".sort-descending-btn"
+          );
+
+          [...sortAscendingBtns].forEach((sortBtn) => {
+            sortBtn.addEventListener("click", (event) => {
+              sortAscending(event.target.getAttribute("data-id"));
+            });
+          });
+
+          [...sortDescendingBtns].forEach((sortBtn) => {
+            sortBtn.addEventListener("click", (event) => {
+              sortDescending(event.target.getAttribute("data-id"));
+            });
+          });
+
+          observer.disconnect();
+        }
+      });
+    });
+
+    observer.observe(tableEl, { childList: true, subtree: true });
   }
 
   /**

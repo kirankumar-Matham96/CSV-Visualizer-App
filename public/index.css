@@ -10,3 +10,10 @@ body {
 .flex-gap > button {
   margin: 10px 10px 0;
 }
+
+.sort-ascending-btn,
+.sort-descending-btn {
+  padding: 4px 6px;
+  font-size: 0.5rem;
+  border-radius: 20rem;
+}
