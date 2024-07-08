@@ -1,12 +1,15 @@
 // API related functionality
 const baseUrl = "http://localhost:3000";
 let fileData = {};
+let fileId = "";
+let totalItems = 0;
+let currentPage = 1;
 
 const uploadFile = async (data) => {
   try {
     const options = {
       method: "POST",
-      headers: [],
+      headers: {},
       body: data,
     };
     const response = await fetch(`${baseUrl}/api/csv`, options);
@@ -27,11 +30,12 @@ const getFiles = async () => {
   }
 };
 
-const getFileData = async (id) => {
+const getFileData = async (id = fileId, page = 1) => {
   try {
-    const response = await fetch(`${baseUrl}/api/csv/${id}`);
+    const response = await fetch(`${baseUrl}/api/csv/${id}?page=${page}`);
     const readable = await response.json();
 
+    totalItems = readable.totalItems;
     // saving for search filtering
     fileData = readable.file;
 
@@ -43,9 +47,11 @@ const getFileData = async (id) => {
 
 // DOM related functionality
 document.addEventListener("DOMContentLoaded", async () => {
+  let myChart;
+
   // Sorting functions
   function sortAscending(columnName) {
-    const sortedData = {};
+    const sortedData = { data: [] };
     sortedData.data = fileData.data
       .slice()
       .sort((a, b) => a[columnName].localeCompare(b[columnName]));
@@ -53,14 +59,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function sortDescending(columnName) {
-    const sortedData = {};
+    const sortedData = { data: [] };
     sortedData.data = fileData.data
       .slice()
       .sort((a, b) => b[columnName].localeCompare(a[columnName]));
     createFileDisplayContent(sortedData);
   }
 
-  const files = await getFiles();
+  // const files = await getFiles();
 
   const fileUploadFormEl = document.querySelector(".file-upload-form");
   const fileListEl = document.querySelector(".files-list-container");
@@ -94,11 +100,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   /**
+   * Generate pagination
+   */
+  function renderPagination() {
+    // let currentPage = 1;
+
+    const totalPages = Math.ceil(totalItems / 100);
+    const paginationContainer = document.getElementById("pagination");
+    paginationContainer.innerHTML = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+      const pageItem = document.createElement("li");
+      pageItem.classList.add("page-item");
+      if (i === currentPage) {
+        pageItem.classList.add("active");
+      }
+      const pageLink = document.createElement("a");
+      pageLink.classList.add("page-link");
+      pageLink.href = "#";
+      pageLink.textContent = i;
+      pageLink.addEventListener("click", async (event) => {
+        event.preventDefault();
+        currentPage = i;
+        const data = await getFileData(fileId, currentPage);
+        createFileDisplayContent(data);
+        renderPagination();
+      });
+      pageItem.appendChild(pageLink);
+      paginationContainer.appendChild(pageItem);
+    }
+  }
+
+  /**
    * Populates the files list.
    */
-  function createFilesList() {
+  async function createFilesList() {
     try {
       fileListEl.innerHTML = "";
+      const files = await getFiles();
       files.map((file) => {
         const fileBtn = document.createElement("button");
         fileBtn.classList.add("btn", "btn-outline-info");
@@ -107,8 +146,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         fileBtn.addEventListener("click", async (event) => {
           const id = event.target.getAttribute("id");
-          const data = await getFileData(id);
+          fileId = id;
+          const data = await getFileData();
+          destroyExistingChart();
           createFileDisplayContent(data);
+          currentPage = 1;
+          renderPagination();
         });
 
         fileListEl.appendChild(fileBtn);
@@ -116,6 +159,76 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  function destroyExistingChart() {
+    // destroying the chart if exists already
+    if (myChart) {
+      myChart.destroy();
+    }
+  }
+
+  function displayChart(columnName) {
+    const ctx = document.getElementById("myChart").getContext("2d");
+
+    destroyExistingChart();
+
+    const data = fileData.data.map((item) => item[columnName]);
+
+    // creating a new chart
+    myChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: fileData.data.map((_, index) => index + 1),
+        datasets: [
+          {
+            label: columnName,
+            data: data,
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  function requestAnimationFrame() {
+    setTimeout(() => {
+      const sortAscendingBtns = document.querySelectorAll(
+        ".sort-ascending-btn"
+      );
+      const sortDescendingBtns = document.querySelectorAll(
+        ".sort-descending-btn"
+      );
+      const chartBtns = document.querySelectorAll(".chart");
+
+      [...sortAscendingBtns].forEach((sortBtn) => {
+        sortBtn.addEventListener("click", (event) => {
+          sortAscending(event.target.getAttribute("data-id"));
+        });
+      });
+
+      [...sortDescendingBtns].forEach((sortBtn) => {
+        sortBtn.addEventListener("click", (event) => {
+          sortDescending(event.target.getAttribute("data-id"));
+        });
+      });
+
+      [...chartBtns].forEach((chartBtn) => {
+        chartBtn.addEventListener("click", (event) => {
+          const column =
+            event.target.getAttribute("data-col") ||
+            event.target.parentElement.getAttribute("data-col");
+          displayChart(column);
+        });
+      });
+    }, 200);
   }
 
   function createFileDisplayContent(fileData) {
@@ -128,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <th scope="col">#</th>
         ${headings
           .map((row) => {
-            const element = `<th scope="col">${row}<button class="btn btn-secondary ms-3 sort-ascending-btn" data-id="${row}"><i class="fa-solid fa-chevron-up"></i></button> <button class="btn btn-secondary sort-descending-btn" data-id="${row}"><i class="fa-solid fa-chevron-down"></i></button> </th>`;
+            const element = `<th scope="col">${row}<button class="btn btn-success ms-3 chart" data-col="${row}"><i class="fa-solid fa-chart-simple"></i></button><button class="btn btn-secondary ms-3 sort-ascending-btn" data-id="${row}"><i class="fa-solid fa-chevron-up"></i></button> <button class="btn btn-secondary sort-descending-btn" data-id="${row}"><i class="fa-solid fa-chevron-down"></i></button> </th>`;
             return element;
           })
           .join("")}
@@ -139,7 +252,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .map(
           (row, index) =>
             `<tr>
-          <th scope="row">${index + 1}</th>
+          <th scope="row">${index + (currentPage - 1) * 100 + 1}</th>
           ${headings.map((heading) => `<td>${row[heading]}</td>`).join("")}
         </tr>`
         )
@@ -147,36 +260,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     </tbody>
     `;
 
-    // TODO: Need to add a spinner for loading all the content and adding all the listeners
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-          const sortAscendingBtns = document.querySelectorAll(
-            ".sort-ascending-btn"
-          );
-          const sortDescendingBtns = document.querySelectorAll(
-            ".sort-descending-btn"
-          );
-
-          [...sortAscendingBtns].forEach((sortBtn) => {
-            sortBtn.addEventListener("click", (event) => {
-              sortAscending(event.target.getAttribute("data-id"));
-            });
-          });
-
-          [...sortDescendingBtns].forEach((sortBtn) => {
-            sortBtn.addEventListener("click", (event) => {
-              sortDescending(event.target.getAttribute("data-id"));
-            });
-          });
-
-          observer.disconnect();
-        }
-      });
-    });
-
-    observer.observe(tableEl, { childList: true, subtree: true });
+    requestAnimationFrame();
   }
 
   /**

@@ -57,11 +57,20 @@
           <input type="search" id="search-input" />
         </div>
 
+        <div>
+          <canvas id="myChart"></canvas>
+        </div>
+
         <!-- display file data here -->
         <table class="table table-bordered file-data-table-container">
           <!-- file data goes here -->
-          <!-- <h5 class="mt-5 text-center">Select a file to see the data</h5> -->
         </table>
+        <!-- pagination -->
+        <nav aria-label="...">
+          <ul class="pagination pagination-md" id="pagination">
+            <!-- pagination numbers -->
+          </ul>
+        </nav>
       </div>
     </div>
     <script
@@ -69,6 +78,8 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <!-- chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="index.js"></script>
   </body>
 </html>

@@ -12,7 +12,8 @@ body {
 }
 
 .sort-ascending-btn,
-.sort-descending-btn {
+.sort-descending-btn,
+.chart {
   padding: 4px 6px;
   font-size: 0.5rem;
   border-radius: 20rem;

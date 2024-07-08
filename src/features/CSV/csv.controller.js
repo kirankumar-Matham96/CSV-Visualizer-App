@@ -51,9 +51,29 @@ export class CSVController {
 
   getFileById = async (req, res, next) => {
     try {
+      const { page } = req.query;
       const { id } = req.params;
       const file = await this.fileRepository.get(id);
-      res.status(200).json({ success: true, file });
+      let offset = 0;
+      let limit = 100;
+      if (page) {
+        offset = (page - 1) * 100;
+        limit *= page;
+      }
+
+      console.log({ page, offset, limit });
+
+      // pagination
+      const paginatedFile = {};
+      paginatedFile.data = file.data.slice(offset, limit);
+
+      res
+        .status(200)
+        .json({
+          success: true,
+          file: paginatedFile,
+          totalItems: file.data.length,
+        });
     } catch (error) {
       next(error);
     }
